@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jonatasosilva/alura-nodejs-rest#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "body-parser": "^1.19.0",
     "consign": "^0.1.6",
     "express": "^4.17.1",
