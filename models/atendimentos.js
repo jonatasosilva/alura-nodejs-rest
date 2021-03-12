@@ -2,12 +2,13 @@ const moment = require("moment");
 const axios = require("axios");
 const conexao = require("../infraestrutura/database/conexao");
 const repositorio = require("../repositorios/atendimento");
+const atendimento = require("../repositorios/atendimento");
 
 class Atendimento {
   constructor() {
     this.dataEhValida = ({ data, dataCriacao }) =>
       moment(data).isSameOrAfter(dataCriacao);
-    this.clienteEhValido = (tamanho) => tamanho >= 5;
+    this.clienteEhValido = ({ tamanho }) => tamanho >= 5;
 
     this.valida = (parametros) =>
       this.validacoes.filter((campo) => {
@@ -61,21 +62,16 @@ class Atendimento {
     return repositorio.lista();
   }
 
-  buscaPorId(id, res) {
-    const sql = `SELECT * FROM atendimentos WHERE ID = ${id}`;
-
-    conexao.query(sql, async (erro, resultados) => {
+  buscaPorId(id) {
+    return repositorio.buscarPorId(id).then(async (resultados) => {
       const atendimento = resultados[0];
       const cpf = atendimento.cliente;
-      if (erro) {
-        res.status(400).json(erro);
-      } else {
-        const { data } = await axios.get(`http://localhost:8082/${cpf}`);
 
-        atendimento.cliente = data;
+      const { data } = await axios.get(`http://localhost:8082/${cpf}`);
 
-        res.status(200).json(atendimento);
-      }
+      atendimento.cliente = data;
+
+      return atendimento;
     });
   }
 
@@ -86,27 +82,11 @@ class Atendimento {
       );
     }
 
-    const sql = "UPDATE atendimentos SET ? WHERE id = ?";
-
-    conexao.query(sql, [valores, id], (erro, resultados) => {
-      if (erro) {
-        res.status(400).json(erro);
-      } else {
-        res.status(200).json({ ...valores, id });
-      }
-    });
+    return repositorio.altera(id, valores);
   }
 
-  deleta(id, res) {
-    const sql = "DELETE FROM atendimentos WHERE id = ?";
-
-    conexao.query(sql, id, (erro, resultados) => {
-      if (erro) {
-        res.status(400).json(erro);
-      } else {
-        res.status(200).json({ id });
-      }
-    });
+  deleta(id) {
+    return repositorio.deleta(id);
   }
 }
 
